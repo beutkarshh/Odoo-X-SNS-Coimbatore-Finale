@@ -1,7 +1,7 @@
 export const Role = {
   ADMIN: 'ADMIN',
   INTERNAL: 'INTERNAL',
-  CUSTOMER: 'CUSTOMER',
+  PORTAL: 'PORTAL',
 };
 
 export const InternalRequestStatus = {

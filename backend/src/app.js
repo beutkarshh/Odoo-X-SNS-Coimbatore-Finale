@@ -10,6 +10,10 @@ const planRoutes = require('./routes/plan.routes');
 const subscriptionRoutes = require('./routes/subscription.routes');
 const invoiceRoutes = require('./routes/invoice.routes');
 const paymentRoutes = require('./routes/payment.routes');
+const taxRoutes = require('./routes/tax.routes');
+const discountRoutes = require('./routes/discount.routes');
+const variantRoutes = require('./routes/productVariant.routes');
+const quotationTemplateRoutes = require('./routes/quotationTemplate.routes');
 
 function createApp() {
 	const app = express();
@@ -35,6 +39,10 @@ function createApp() {
 	app.use('/api/subscriptions', subscriptionRoutes);
 	app.use('/api/invoices', invoiceRoutes);
 	app.use('/api/payments', paymentRoutes);
+	app.use('/api/taxes', taxRoutes);
+	app.use('/api/discounts', discountRoutes);
+	app.use('/api/product-variants', variantRoutes);
+	app.use('/api/quotation-templates', quotationTemplateRoutes);
 
 	// 404
 	app.use((_req, res) => {

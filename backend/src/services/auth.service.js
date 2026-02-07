@@ -1,5 +1,5 @@
 const { PrismaClient } = require('@prisma/client');
-const { comparePassword } = require('../utils/hash');
+const { comparePassword, hashPassword } = require('../utils/hash');
 const { generateToken } = require('../utils/jwt');
 
 const prisma = new PrismaClient();
@@ -64,6 +64,60 @@ async function login(email, password) {
 }
 
 /**
+ * Register new customer user
+ * @param {string} name - User name
+ * @param {string} email - User email
+ * @param {string} password - Plain text password
+ * @returns {Promise<Object>} User data and JWT token
+ * @throws {Error} If email already exists
+ */
+async function register(name, email, password) {
+  // Check if user already exists
+  const existingUser = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (existingUser) {
+    const err = new Error('An account with this email already exists');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // Hash password
+  const hashedPassword = await hashPassword(password);
+
+  // Create new customer user
+  const user = await prisma.user.create({
+    data: {
+      name,
+      email,
+      password: hashedPassword,
+      role: 'PORTAL',
+      isActive: true,
+    },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      isActive: true,
+    },
+  });
+
+  // Generate JWT token
+  const token = generateToken({
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+  });
+
+  return {
+    user,
+    token,
+  };
+}
+
+/**
  * Get user profile by ID
  * @param {number} userId - User ID
  * @returns {Promise<Object>} User data
@@ -92,6 +146,7 @@ async function getUserProfile(userId) {
 
 module.exports = {
   login,
+  register,
   getUserProfile,
 };
 

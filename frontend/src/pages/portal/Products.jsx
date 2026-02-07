@@ -31,6 +31,7 @@ export default function PortalProducts() {
   const [isLoading, setIsLoading] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState('card'); // 'card', 'upi', 'netbanking'
   const [selectedUPIApp, setSelectedUPIApp] = useState(null);
+  const [previewInvoiceNumber, setPreviewInvoiceNumber] = useState('');
   const [paymentData, setPaymentData] = useState({
     // Credit Card
     cardNumber: '',
@@ -93,12 +94,6 @@ export default function PortalProducts() {
   const GST_PERCENT = 18;
   const PLATFORM_FEE = 99;
 
-  // Generate invoice number
-  const generateInvoiceNumber = () => {
-    const timestamp = Date.now();
-    return `INV-${timestamp.toString().slice(-6)}`;
-  };
-
   // Calculate invoice amounts
   const calculateInvoice = (plan) => {
     if (!plan) return null;
@@ -133,6 +128,9 @@ export default function PortalProducts() {
   const handlePayNow = (plan) => {
     setSelectedPlan(plan);
     setIsPlansModalOpen(false);
+    // Generate invoice number once when opening the preview
+    const timestamp = Date.now();
+    setPreviewInvoiceNumber(`INV-${timestamp.toString().slice(-6)}`);
     setIsInvoicePreviewOpen(true);
   };
 
@@ -398,7 +396,7 @@ export default function PortalProducts() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-muted-foreground">Invoice Number</p>
-                    <p className="font-mono font-semibold text-foreground">{generateInvoiceNumber()}</p>
+                    <p className="font-mono font-semibold text-foreground">{previewInvoiceNumber}</p>
                     <p className="text-sm text-muted-foreground mt-2">Date</p>
                     <p className="font-medium text-foreground">{formatDate(new Date())}</p>
                   </div>

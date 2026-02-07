@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Layout } from '../../components/Layout/Layout.jsx';
 import { PageHeader } from '../../components/ui/PageHeader.jsx';
 import { StatusBadge } from '../../components/StatusBadge.jsx';
 import { Button } from '../../components/ui/Button.jsx';
-import { getInvoicesWithDetails } from '../../data/mockData.js';
+import { invoiceService } from '../../lib/services/invoiceService.js';
+import { useToast } from '../../hooks/use-toast';
 import { InvoiceStatus, INVOICE_TRANSITIONS } from '../../data/constants.js';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +15,29 @@ import {
 } from '../../components/ui/DropdownMenu.jsx';
 
 export default function AdminInvoices() {
-  const [invoices, setInvoices] = useState(getInvoicesWithDetails());
+  const [invoices, setInvoices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    loadInvoices();
+  }, []);
+
+  const loadInvoices = async () => {
+    try {
+      setLoading(true);
+      const response = await invoiceService.getAll();
+      setInvoices(response.data || []);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to load invoices',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatDateTime = (date) => {
     if (!date) return 'N/A';
@@ -32,10 +55,21 @@ export default function AdminInvoices() {
     return INVOICE_TRANSITIONS[status] || [];
   };
 
-  const handleStatusChange = (invoiceId, newStatus) => {
-    setInvoices((prev) =>
-      prev.map((inv) => (inv.id === invoiceId ? { ...inv, status: newStatus } : inv))
-    );
+  const handleStatusChange = async (invoiceId, newStatus) => {
+    try {
+      await invoiceService.update(invoiceId, { status: newStatus });
+      toast({
+        title: 'Success',
+        description: 'Invoice status updated successfully',
+      });
+      loadInvoices();
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update invoice status',
+      });
+    }
   };
 
   const getActionLabel = (status) => {
@@ -47,10 +81,10 @@ export default function AdminInvoices() {
     return labels[status];
   };
 
-  const totalAmount = invoices.reduce((sum, inv) => sum + inv.total, 0);
+  const totalAmount = invoices.reduce((sum, inv) => sum + (inv.totalAmount || 0), 0);
   const paidAmount = invoices
     .filter((inv) => inv.status === InvoiceStatus.PAID)
-    .reduce((sum, inv) => sum + inv.total, 0);
+    .reduce((sum, inv) => sum + (inv.totalAmount || 0), 0);
 
   return (
     <Layout type="admin">
@@ -72,74 +106,84 @@ export default function AdminInvoices() {
       </div>
 
       <div className="bg-card border border-border rounded-md overflow-hidden">
-        <table className="erp-table">
-          <thead>
-            <tr>
-              <th>Invoice Number</th>
-              <th>Customer</th>
-              <th>Subscription</th>
-              <th>Amount</th>
-              <th>Created Date & Time</th>
-              <th>Paid At</th>
-              <th>Status</th>
-              <th className="w-32">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoices.map((invoice) => {
-              const nextActions = getNextActions(invoice.status);
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : invoices.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            No invoices found.
+          </div>
+        ) : (
+          <table className="erp-table">
+            <thead>
+              <tr>
+                <th>Invoice Number</th>
+                <th>Customer</th>
+                <th>Subscription</th>
+                <th>Amount</th>
+                <th>Created Date & Time</th>
+                <th>Paid At</th>
+                <th>Status</th>
+                <th className="w-32">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {invoices.map((invoice) => {
+                const nextActions = getNextActions(invoice.status);
 
-              return (
-                <tr key={invoice.id}>
-                  <td className="font-medium text-foreground">{invoice.number}</td>
-                  <td>
-                    <div>
-                      <p className="font-medium">{invoice.customerName || invoice.user?.name}</p>
-                      <p className="text-xs text-muted-foreground">{invoice.user?.email}</p>
-                    </div>
-                  </td>
-                  <td>{invoice.subscription?.number}</td>
-                  <td>₹{invoice.total.toFixed(0)}</td>
-                  <td className="text-sm">{formatDateTime(invoice.createdAt)}</td>
-                  <td className="text-sm">
-                    {invoice.paidAt ? (
-                      <span className="text-green-600">{formatDateTime(invoice.paidAt)}</span>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
-                  </td>
-                  <td>
-                    <StatusBadge status={invoice.status} />
-                  </td>
-                  <td>
-                    {nextActions.length > 0 ? (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="outline" size="sm" className="h-8">
-                            Actions
-                            <ChevronDown size={14} className="ml-1" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {nextActions.map((action) => (
-                            <DropdownMenuItem
-                              key={action}
-                              onClick={() => handleStatusChange(invoice.id, action)}
-                            >
-                              {getActionLabel(action)}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Completed</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                return (
+                  <tr key={invoice.id}>
+                    <td className="font-medium text-foreground">{invoice.number}</td>
+                    <td>
+                      <div>
+                        <p className="font-medium">{invoice.user?.name || 'N/A'}</p>
+                        <p className="text-xs text-muted-foreground">{invoice.user?.email}</p>
+                      </div>
+                    </td>
+                    <td>{invoice.subscription?.number || '-'}</td>
+                    <td>₹{(invoice.totalAmount || 0).toFixed(0)}</td>
+                    <td className="text-sm">{formatDateTime(invoice.createdAt)}</td>
+                    <td className="text-sm">
+                      {invoice.paidAt ? (
+                        <span className="text-green-600">{formatDateTime(invoice.paidAt)}</span>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </td>
+                    <td>
+                      <StatusBadge status={invoice.status} />
+                    </td>
+                    <td>
+                      {nextActions.length > 0 ? (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-8">
+                              Actions
+                              <ChevronDown size={14} className="ml-1" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {nextActions.map((action) => (
+                              <DropdownMenuItem
+                                key={action}
+                                onClick={() => handleStatusChange(invoice.id, action)}
+                              >
+                                {getActionLabel(action)}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Completed</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <div className="mt-6 p-4 bg-muted/50 rounded-md">

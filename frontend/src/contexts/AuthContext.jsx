@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback } from 'react';
-import { getAllUsers, getPendingInternalRequests } from '../data/mockData.js';
-import { Role, InternalRequestStatus } from '../data/constants.js';
+import authService from '../lib/services/authService.js';
+import { Role } from '../data/constants.js';
 
 const AuthContext = createContext(undefined);
 
@@ -11,34 +11,19 @@ export function AuthProvider({ children }) {
   });
 
   const login = useCallback(async (email, password) => {
-    // Check if this is a pending internal user request
-    const pendingRequests = getPendingInternalRequests();
-    const pendingRequest = pendingRequests.find(
-      r => r.email.toLowerCase() === email.toLowerCase() && r.status === InternalRequestStatus.PENDING
-    );
+    const result = await authService.login(email, password);
     
-    if (pendingRequest) {
-      // Return special status for pending internal user
-      return { success: false, isPending: true };
+    if (result.success) {
+      setUser(result.user);
+      return { success: true, user: result.user };
     }
-
-    // Check all users (including approved internal users)
-    const allUsers = getAllUsers();
-    const foundUser = allUsers.find(
-      u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-    );
     
-    if (foundUser) {
-      setUser(foundUser);
-      localStorage.setItem('currentUser', JSON.stringify(foundUser));
-      return { success: true, user: foundUser };
-    }
-    return { success: false, isPending: false };
+    return { success: false, message: result.message, isPending: false };
   }, []);
 
   const logout = useCallback(() => {
+    authService.logout();
     setUser(null);
-    localStorage.removeItem('currentUser');
   }, []);
 
   const value = {
@@ -61,4 +46,4 @@ export function useAuth() {
 
 export const isAdmin = (user) => user?.role === Role.ADMIN;
 export const isInternal = (user) => user?.role === Role.INTERNAL;
-export const isCustomer = (user) => user?.role === Role.CUSTOMER;
+export const isPortal = (user) => user?.role === Role.PORTAL;

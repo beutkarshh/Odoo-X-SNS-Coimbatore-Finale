@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext.jsx';
+import authService from '../../lib/services/authService.js';
 import { Button } from '../../components/ui/Button.jsx';
 import { Input } from '../../components/ui/Input.jsx';
 import { Label } from '../../components/ui/Label.jsx';
 import { AlertCircle, CheckCircle, Clock, User, Users } from 'lucide-react';
-import { addPendingInternalRequest, getAllUsers } from '../../data/mockData.js';
 import { Role } from '../../data/constants.js';
 
 export default function PortalSignup() {
@@ -20,6 +21,7 @@ export default function PortalSignup() {
   const [pendingApproval, setPendingApproval] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleChange = (e) => {
     setFormData((prev) => ({
@@ -40,54 +42,53 @@ export default function PortalSignup() {
     setError('');
     setIsLoading(true);
 
+    // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       setIsLoading(false);
       return;
     }
 
+    // Validate password length
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters');
       setIsLoading(false);
       return;
     }
 
-    // Check if email already exists
-    const existingUsers = getAllUsers();
-    if (existingUsers.some(u => u.email.toLowerCase() === formData.email.toLowerCase())) {
-      setError('An account with this email already exists');
+    if (formData.userType === 'internal') {
+      // For internal staff, show message that this feature requires admin approval
+      // Note: This would need a separate endpoint for requesting internal access
+      setError('Internal staff registration requires administrator approval. Please contact your admin.');
       setIsLoading(false);
       return;
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    if (formData.userType === 'internal') {
-      // Add to pending internal requests
-      addPendingInternalRequest({
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-      });
-      setPendingApproval(true);
     } else {
-      // Add customer user directly
-      const storedUsers = localStorage.getItem('additionalUsers');
-      const additionalUsers = storedUsers ? JSON.parse(storedUsers) : [];
-      const newUser = {
-        id: Date.now(),
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        role: Role.CUSTOMER,
-        createdAt: new Date().toISOString(),
-      };
-      additionalUsers.push(newUser);
-      localStorage.setItem('additionalUsers', JSON.stringify(additionalUsers));
-      setSuccess(true);
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
+      // Register customer via API
+      const result = await authService.register(
+        formData.name,
+        formData.email,
+        formData.password
+      );
+
+      if (result.success) {
+        // Auto-login after successful registration
+        const loginResult = await login(formData.email, formData.password);
+        
+        if (loginResult.success) {
+          setSuccess(true);
+          setTimeout(() => {
+            navigate('/portal/dashboard');
+          }, 1500);
+        } else {
+          // Registration successful but login failed (shouldn't happen)
+          setSuccess(true);
+          setTimeout(() => {
+            navigate('/login');
+          }, 2000);
+        }
+      } else {
+        setError(result.message || 'Registration failed. Please try again.');
+      }
     }
 
     setIsLoading(false);

@@ -9,6 +9,8 @@ import AdminDashboard from '../pages/admin/Dashboard.jsx';
 import AdminProductsNew from '../pages/admin/ProductsNew.jsx';
 import AdminProductPlans from '../pages/admin/ProductPlans.jsx';
 import AdminPlanSubscribers from '../pages/admin/PlanSubscribers.jsx';
+import AdminSubscriptions from '../pages/admin/Subscriptions.jsx';
+import AdminInvoices from '../pages/admin/Invoices.jsx';
 
 import InternalDashboard from '../pages/internal/Dashboard.jsx';
 import InternalSubscriptions from '../pages/internal/Subscriptions.jsx';
@@ -73,6 +75,22 @@ export function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/admin/subscriptions"
+        element={
+          <ProtectedRoute allowedRoles={[Role.ADMIN]}>
+            <AdminSubscriptions />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/invoices"
+        element={
+          <ProtectedRoute allowedRoles={[Role.ADMIN]}>
+            <AdminInvoices />
+          </ProtectedRoute>
+        }
+      />
 
       {/* Internal Routes */}
       <Route
@@ -104,7 +122,7 @@ export function AppRoutes() {
       <Route
         path="/portal/dashboard"
         element={
-          <ProtectedRoute allowedRoles={[Role.CUSTOMER]}>
+          <ProtectedRoute allowedRoles={[Role.PORTAL]}>
             <PortalDashboard />
           </ProtectedRoute>
         }
@@ -112,7 +130,7 @@ export function AppRoutes() {
       <Route
         path="/portal/products"
         element={
-          <ProtectedRoute allowedRoles={[Role.CUSTOMER]}>
+          <ProtectedRoute allowedRoles={[Role.PORTAL]}>
             <PortalProducts />
           </ProtectedRoute>
         }
@@ -120,7 +138,7 @@ export function AppRoutes() {
       <Route
         path="/portal/subscriptions"
         element={
-          <ProtectedRoute allowedRoles={[Role.CUSTOMER]}>
+          <ProtectedRoute allowedRoles={[Role.PORTAL]}>
             <PortalSubscriptions />
           </ProtectedRoute>
         }
@@ -128,7 +146,7 @@ export function AppRoutes() {
       <Route
         path="/portal/invoices"
         element={
-          <ProtectedRoute allowedRoles={[Role.CUSTOMER]}>
+          <ProtectedRoute allowedRoles={[Role.PORTAL]}>
             <PortalInvoices />
           </ProtectedRoute>
         }
@@ -136,7 +154,7 @@ export function AppRoutes() {
       <Route
         path="/portal/profile"
         element={
-          <ProtectedRoute allowedRoles={[Role.CUSTOMER]}>
+          <ProtectedRoute allowedRoles={[Role.PORTAL]}>
             <PortalProfile />
           </ProtectedRoute>
         }

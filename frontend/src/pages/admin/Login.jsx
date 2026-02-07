@@ -97,7 +97,7 @@ export default function AdminLogin() {
 
           <div className="mt-6 p-4 bg-muted/50 rounded-md">
             <p className="text-xs text-muted-foreground mb-2">Demo credentials:</p>
-            <p className="text-xs font-mono text-foreground">admin@example.com / admin123</p>
+            <p className="text-xs font-mono text-foreground">admin@demo.com / Admin@1234</p>
           </div>
 
           <div className="mt-6 text-center text-sm">

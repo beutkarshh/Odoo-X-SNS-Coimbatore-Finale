@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Layout } from '../../components/Layout/Layout.jsx';
 import { PageHeader } from '../../components/ui/PageHeader.jsx';
 import { Button } from '../../components/ui/Button.jsx';
 import { Input } from '../../components/ui/Input.jsx';
 import { Label } from '../../components/ui/Label.jsx';
-import { mockProducts } from '../../data/mockData.js';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { productService } from '../../lib/services/productService.js';
+import { useToast } from '../../hooks/use-toast';
+import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -14,19 +15,42 @@ import {
 } from '../../components/Modal.jsx';
 
 export default function AdminProducts() {
-  const [products, setProducts] = useState(mockProducts);
+  const [products, setProducts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: '',
-    type: '',
-    salePrice: '',
-    costPrice: '',
+    sku: '',
+    description: '',
+    price: '',
   });
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await productService.getAll();
+      setProducts(response.data || []);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to load products',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const openCreateModal = () => {
     setEditingProduct(null);
-    setFormData({ name: '', type: '', salePrice: '', costPrice: '' });
+    setFormData({ name: '', sku: '', description: '', price: '' });
     setIsModalOpen(true);
   };
 
@@ -34,47 +58,68 @@ export default function AdminProducts() {
     setEditingProduct(product);
     setFormData({
       name: product.name,
-      type: product.type,
-      salePrice: product.salePrice.toString(),
-      costPrice: product.costPrice.toString(),
+      sku: product.sku || '',
+      description: product.description || '',
+      price: product.price.toString(),
     });
     setIsModalOpen(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
 
-    if (editingProduct) {
-      setProducts((prev) =>
-        prev.map((p) =>
-          p.id === editingProduct.id
-            ? {
-                ...p,
-                name: formData.name,
-                type: formData.type,
-                salePrice: parseFloat(formData.salePrice),
-                costPrice: parseFloat(formData.costPrice),
-              }
-            : p
-        )
-      );
-    } else {
-      const newProduct = {
-        id: Math.max(...products.map((p) => p.id)) + 1,
+    try {
+      const productData = {
         name: formData.name,
-        type: formData.type,
-        salePrice: parseFloat(formData.salePrice),
-        costPrice: parseFloat(formData.costPrice),
+        sku: formData.sku,
+        description: formData.description,
+        price: parseFloat(formData.price),
       };
-      setProducts((prev) => [...prev, newProduct]);
-    }
 
-    setIsModalOpen(false);
+      if (editingProduct) {
+        await productService.update(editingProduct.id, productData);
+        toast({
+          title: 'Success',
+          description: 'Product updated successfully',
+        });
+      } else {
+        await productService.create(productData);
+        toast({
+          title: 'Success',
+          description: 'Product created successfully',
+        });
+      }
+
+      setIsModalOpen(false);
+      loadProducts();
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to save product',
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleDelete = (id) => {
-    if (confirm('Are you sure you want to delete this product?')) {
-      setProducts((prev) => prev.filter((p) => p.id !== id));
+  const handleDelete = async (id) => {
+    if (!confirm('Are you sure you want to delete this product?')) return;
+
+    try {
+      await productService.delete(id);
+      toast({
+        title: 'Success',
+        description: 'Product deleted successfully',
+      });
+      loadProducts();
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to delete product',
+      });
     }
   };
 
@@ -91,27 +136,32 @@ export default function AdminProducts() {
       />
 
       <div className="bg-card border border-border rounded-md overflow-hidden">
-        <table className="erp-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Sale Price</th>
-              <th>Cost Price</th>
-              <th>Margin</th>
-              <th className="w-24">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product) => {
-              const margin = (((product.salePrice - product.costPrice) / product.salePrice) * 100).toFixed(1);
-              return (
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            No products found. Create your first product to get started.
+          </div>
+        ) : (
+          <table className="erp-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>SKU</th>
+                <th>Description</th>
+                <th>Price</th>
+                <th className="w-24">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((product) => (
                 <tr key={product.id}>
                   <td className="font-medium text-foreground">{product.name}</td>
-                  <td>{product.type}</td>
-                  <td>₹{product.salePrice.toFixed(0)}</td>
-                  <td>₹{product.costPrice.toFixed(0)}</td>
-                  <td className="text-success">{margin}%</td>
+                  <td>{product.sku || '-'}</td>
+                  <td className="max-w-xs truncate">{product.description || '-'}</td>
+                  <td>₹{product.price.toFixed(0)}</td>
                   <td>
                     <div className="flex items-center gap-2">
                       <button
@@ -129,10 +179,10 @@ export default function AdminProducts() {
                     </div>
                   </td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -154,54 +204,55 @@ export default function AdminProducts() {
               />
             </div>
             <div>
-              <Label htmlFor="type" className="form-label">
-                Type
+              <Label htmlFor="sku" className="form-label">
+                SKU
               </Label>
               <Input
-                id="type"
-                value={formData.type}
-                onChange={(e) => setFormData((prev) => ({ ...prev, type: e.target.value }))}
-                placeholder="e.g., Service, Feature, Support"
+                id="sku"
+                value={formData.sku}
+                onChange={(e) => setFormData((prev) => ({ ...prev, sku: e.target.value }))}
+                placeholder="e.g., PROD-001"
+                className="form-input"
+              />
+            </div>
+            <div>
+              <Label htmlFor="description" className="form-label">
+                Description
+              </Label>
+              <Input
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                className="form-input"
+              />
+            </div>
+            <div>
+              <Label htmlFor="price" className="form-label">
+                Price (₹)
+              </Label>
+              <Input
+                id="price"
+                type="number"
+                step="0.01"
+                value={formData.price}
+                onChange={(e) => setFormData((prev) => ({ ...prev, price: e.target.value }))}
                 className="form-input"
                 required
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="salePrice" className="form-label">
-                  Sale Price (₹)
-                </Label>
-                <Input
-                  id="salePrice"
-                  type="number"
-                  step="1"
-                  value={formData.salePrice}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, salePrice: e.target.value }))}
-                  className="form-input"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="costPrice" className="form-label">
-                  Cost Price (₹)
-                </Label>
-                <Input
-                  id="costPrice"
-                  type="number"
-                  step="1"
-                  value={formData.costPrice}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, costPrice: e.target.value }))}
-                  className="form-input"
-                  required
-                />
-              </div>
-            </div>
             <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} disabled={submitting}>
                 Cancel
               </Button>
-              <Button type="submit" className="bg-primary hover:bg-primary/90">
-                {editingProduct ? 'Update' : 'Create'}
+              <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={submitting}>
+                {submitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  editingProduct ? 'Update' : 'Create'
+                )}
               </Button>
             </div>
           </form>

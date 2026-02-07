@@ -85,7 +85,7 @@ export const mockUsers = [
     name: 'John Customer',
     email: 'customer@example.com',
     password: 'customer123',
-    role: Role.CUSTOMER,
+    role: Role.PORTAL,
     createdAt: new Date('2024-02-01'),
   },
   {
@@ -93,7 +93,7 @@ export const mockUsers = [
     name: 'Sarah Wilson',
     email: 'sarah@example.com',
     password: 'customer123',
-    role: Role.CUSTOMER,
+    role: Role.PORTAL,
     createdAt: new Date('2024-02-15'),
   },
   {
@@ -101,7 +101,7 @@ export const mockUsers = [
     name: 'Mike Johnson',
     email: 'mike@example.com',
     password: 'customer123',
-    role: Role.CUSTOMER,
+    role: Role.PORTAL,
     createdAt: new Date('2024-03-01'),
   },
 ];

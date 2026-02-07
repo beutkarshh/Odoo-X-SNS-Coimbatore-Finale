@@ -97,7 +97,8 @@ export default function InternalLogin() {
 
           <div className="mt-6 p-4 bg-muted/50 rounded-md">
             <p className="text-xs text-muted-foreground mb-2">Demo credentials:</p>
-            <p className="text-xs font-mono text-foreground">internal@example.com / internal123</p>
+            <p className="text-xs font-mono text-foreground">admin@demo.com / Admin@1234</p>
+            <p className="text-xs text-muted-foreground mt-2">(Login as admin, system will auto-assign Internal role)</p>
           </div>
 
           <div className="mt-6 text-center text-sm">

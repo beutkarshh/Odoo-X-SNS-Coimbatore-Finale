@@ -11,6 +11,12 @@ const router = express.Router();
 router.post('/login', authController.login);
 
 /**
+ * POST /api/auth/register
+ * Register new customer account
+ */
+router.post('/register', authController.register);
+
+/**
  * GET /api/auth/me
  * Get current user profile (requires authentication)
  */

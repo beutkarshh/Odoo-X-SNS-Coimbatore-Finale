@@ -131,10 +131,9 @@ export default function PortalLogin() {
           <div className="mt-6 p-4 bg-muted/50 rounded-md">
             <p className="text-xs text-muted-foreground mb-2">Demo credentials:</p>
             <div className="space-y-1 text-xs font-mono text-foreground">
-              <p>Admin: admin@example.com / admin123</p>
-              <p>Internal: internal@example.com / internal123</p>
-              <p>Customer: customer@example.com / customer123</p>
+              <p>Admin: admin@demo.com / Admin@1234</p>
             </div>
+            <p className="text-xs text-muted-foreground mt-2">Or create your own account using Sign Up</p>
           </div>
 
           <div className="mt-6 text-center space-y-2">
