@@ -95,7 +95,7 @@ export default function Index() {
           </div>
           <div className="flex items-center gap-3">
             <Link to="/login">
-              <Button variant="outline" className="border-primary/30 hover:border-primary">
+              <Button variant="outline" className="border-primary/30 hover:border-primary hover:bg-primary/5 hover:text-primary">
                 Login
               </Button>
             </Link>
@@ -110,9 +110,9 @@ export default function Index() {
 
       {/* Hero Section */}
       <section className="relative py-24 px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-primary/3 to-primary/5"></div>
         <div className="absolute top-20 right-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-20 left-20 w-96 h-96 bg-secondary/10 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-20 w-96 h-96 bg-primary/8 rounded-full blur-3xl"></div>
         
         <div className="container mx-auto max-w-5xl text-center relative z-10">
           <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6 leading-tight">
@@ -297,7 +297,7 @@ export default function Index() {
             <ul className="space-y-3">
               {roleFeatures[activeTab].map((feature, index) => (
                 <li key={index} className="flex items-start gap-3">
-                  <CheckCircle size={20} className="text-secondary mt-0.5 flex-shrink-0" />
+                  <CheckCircle size={20} className="text-primary mt-0.5 flex-shrink-0" />
                   <span className="text-muted-foreground">{feature}</span>
                 </li>
               ))}
@@ -321,9 +321,9 @@ export default function Index() {
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {/* New User Card */}
             <div className="relative group">
-              <div className="absolute -inset-0.5 bg-primary/30 rounded-xl blur opacity-30 group-hover:opacity-50 transition duration-300"></div>
-              <div className="relative bg-card border border-border rounded-xl p-8 text-center h-full flex flex-col">
-                <div className="w-16 h-16 mx-auto mb-6 bg-primary/20 rounded-2xl flex items-center justify-center">
+              <div className="absolute -inset-0.5 bg-primary/20 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-300"></div>
+              <div className="relative bg-card border border-border rounded-xl p-8 text-center h-full flex flex-col hover:border-primary/30 transition-colors">
+                <div className="w-16 h-16 mx-auto mb-6 bg-primary/10 rounded-2xl flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                   <Users size={32} className="text-primary" />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-3">New User?</h3>
@@ -341,10 +341,10 @@ export default function Index() {
             
             {/* Existing User Card */}
             <div className="relative group">
-              <div className="absolute -inset-0.5 bg-secondary/30 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-300"></div>
-              <div className="relative bg-card border border-border rounded-xl p-8 text-center h-full flex flex-col">
-                <div className="w-16 h-16 mx-auto mb-6 bg-secondary/20 rounded-2xl flex items-center justify-center">
-                  <Shield size={32} className="text-secondary" />
+              <div className="absolute -inset-0.5 bg-primary/15 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-300"></div>
+              <div className="relative bg-card border border-border rounded-xl p-8 text-center h-full flex flex-col hover:border-primary/30 transition-colors">
+                <div className="w-16 h-16 mx-auto mb-6 bg-primary/10 rounded-2xl flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <Shield size={32} className="text-primary" />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-3">Existing User?</h3>
                 <p className="text-muted-foreground mb-6 flex-grow leading-relaxed">
