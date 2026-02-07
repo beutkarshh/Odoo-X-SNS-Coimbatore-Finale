@@ -18,3 +18,12 @@ exports.getChartData = async (req, res, next) => {
   }
 };
 
+exports.getOperationalStats = async (req, res, next) => {
+  try {
+    const stats = await reportService.getOperationalStats();
+    res.json({ success: true, data: stats });
+  } catch (error) {
+    next(error);
+  }
+};
+

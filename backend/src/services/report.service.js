@@ -152,3 +152,95 @@ exports.getChartData = async () => {
   };
 };
 
+/**
+ * Get operational stats for internal users
+ * Shows pending work items and recent activity
+ */
+exports.getOperationalStats = async () => {
+  // Get pending items by status
+  const [
+    draftSubscriptions,
+    quotationSubscriptions,
+    confirmedSubscriptions,
+    draftInvoices,
+    confirmedInvoices
+  ] = await Promise.all([
+    prisma.subscription.count({ where: { status: SubscriptionStatus.DRAFT } }),
+    prisma.subscription.count({ where: { status: SubscriptionStatus.QUOTATION } }),
+    prisma.subscription.count({ where: { status: SubscriptionStatus.CONFIRMED } }),
+    prisma.invoice.count({ where: { status: InvoiceStatus.DRAFT } }),
+    prisma.invoice.count({ where: { status: InvoiceStatus.CONFIRMED } })
+  ]);
+
+  // Get daily activity for last 7 days
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  sevenDaysAgo.setHours(0, 0, 0, 0);
+
+  const [recentInvoices, recentSubscriptions] = await Promise.all([
+    prisma.invoice.findMany({
+      where: { createdAt: { gte: sevenDaysAgo } },
+      select: { createdAt: true, status: true }
+    }),
+    prisma.subscription.findMany({
+      where: { createdAt: { gte: sevenDaysAgo } },
+      select: { createdAt: true, status: true }
+    })
+  ]);
+
+  // Group by day
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dailyActivity = {};
+  
+  // Initialize last 7 days
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const key = `${days[date.getDay()]} ${date.getDate()}`;
+    dailyActivity[key] = { day: key, invoices: 0, subscriptions: 0 };
+  }
+
+  // Count activity per day
+  recentInvoices.forEach(inv => {
+    const date = new Date(inv.createdAt);
+    const key = `${days[date.getDay()]} ${date.getDate()}`;
+    if (dailyActivity[key]) {
+      dailyActivity[key].invoices++;
+    }
+  });
+
+  recentSubscriptions.forEach(sub => {
+    const date = new Date(sub.createdAt);
+    const key = `${days[date.getDay()]} ${date.getDate()}`;
+    if (dailyActivity[key]) {
+      dailyActivity[key].subscriptions++;
+    }
+  });
+
+  // Get subscription status distribution
+  const subscriptionStatuses = Object.values(SubscriptionStatus);
+  const statusCounts = await Promise.all(
+    subscriptionStatuses.map(status => 
+      prisma.subscription.count({ where: { status } })
+    )
+  );
+
+  const statusDistribution = subscriptionStatuses.map((status, index) => ({
+    name: status.charAt(0) + status.slice(1).toLowerCase(),
+    value: statusCounts[index],
+    status: status
+  })).filter(item => item.value > 0);
+
+  return {
+    pendingWork: [
+      { name: 'Draft Subs', count: draftSubscriptions, type: 'subscription' },
+      { name: 'Quotations', count: quotationSubscriptions, type: 'subscription' },
+      { name: 'To Activate', count: confirmedSubscriptions, type: 'subscription' },
+      { name: 'Draft Invoices', count: draftInvoices, type: 'invoice' },
+      { name: 'Pending Payment', count: confirmedInvoices, type: 'invoice' }
+    ],
+    dailyActivity: Object.values(dailyActivity),
+    statusDistribution
+  };
+};
+

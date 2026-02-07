@@ -45,5 +45,27 @@ export const reportService = {
         topProducts: []
       };
     }
+  },
+
+  /**
+   * Get operational stats for internal dashboard
+   * GET /api/reports/operational-stats
+   */
+  getOperationalStats: async () => {
+    try {
+      const response = await api.get('/api/reports/operational-stats');
+      return response.data.data || {
+        pendingWork: [],
+        dailyActivity: [],
+        statusDistribution: []
+      };
+    } catch (error) {
+      console.error('Failed to fetch operational stats:', error);
+      return {
+        pendingWork: [],
+        dailyActivity: [],
+        statusDistribution: []
+      };
+    }
   }
 };

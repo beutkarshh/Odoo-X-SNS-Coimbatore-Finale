@@ -43,6 +43,47 @@ export const userService = {
       };
     }
   },
+
+  /**
+   * Get all customers (Admin/Internal)
+   * GET /api/users/customers
+   */
+  getCustomers: async () => {
+    try {
+      const response = await api.get('/api/users/customers');
+      const result = response.data.data || response.data;
+      return {
+        success: true,
+        data: result.items || result || [],
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || error.message || 'Failed to fetch customers',
+        data: [],
+      };
+    }
+  },
+
+  /**
+   * Create new customer (Admin/Internal)
+   * POST /api/users/customers
+   */
+  createCustomer: async (customerData) => {
+    try {
+      const response = await api.post('/api/users/customers', customerData);
+      return {
+        success: true,
+        data: response.data.data || response.data,
+        message: 'Customer created successfully',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || error.message || 'Failed to create customer',
+      };
+    }
+  },
 };
 
 export default userService;

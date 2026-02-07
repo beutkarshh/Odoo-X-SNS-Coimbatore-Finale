@@ -17,5 +17,11 @@ router.get('/chart-data',
   reportController.getChartData
 );
 
+router.get('/operational-stats', 
+  authenticateToken, 
+  authorizeRoles('ADMIN', 'INTERNAL'), 
+  reportController.getOperationalStats
+);
+
 module.exports = router;
 

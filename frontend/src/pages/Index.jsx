@@ -6,6 +6,7 @@ import {
   Sparkles, Target, RefreshCw, Bell
 } from 'lucide-react';
 import { useState } from 'react';
+import { ThemeToggle } from '../components/ThemeToggle.jsx';
 
 function FeatureCard({ icon, title, description, delay = 0 }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -85,7 +86,7 @@ export default function Index() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-border bg-white/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img src="/logo.svg" alt="SubsManager" className="w-10 h-10" />
@@ -94,6 +95,8 @@ export default function Index() {
             </span>
           </div>
           <div className="flex items-center gap-3">
+            {/* Theme Toggle */}
+            <ThemeToggle />
             <Link to="/login">
               <Button variant="outline" className="border-primary/30 hover:border-primary hover:bg-primary/5 hover:text-primary">
                 Login
