@@ -4,6 +4,7 @@ const cors = require('cors');
 
 const { errorMiddleware } = require('./middlewares/error.middleware');
 const authRoutes = require('./routes/auth.routes');
+const userRoutes = require('./routes/user.routes');
 
 function createApp() {
 	const app = express();
@@ -23,6 +24,7 @@ function createApp() {
 
 	// API Routes
 	app.use('/api/auth', authRoutes);
+	app.use('/api/users', userRoutes);
 
 	// 404
 	app.use((_req, res) => {
